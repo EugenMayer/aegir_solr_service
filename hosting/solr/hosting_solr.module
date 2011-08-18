@@ -1,0 +1,154 @@
+<?php
+
+/**
+ * @file
+ * Solr of the Hosting Services API.
+ *
+ * Aegir introduces an object representation of the provisioned
+ * services that need to be implemented in both it's front end 
+ * and backend.
+ */
+
+/**
+ * @defgroup hostingserviceapi Frontend Service API
+ * @{
+ *
+ * The "service API" is what makes Aegir capable of managing multiple
+ * services like web or database servers. It provides a level of
+ * abstraction that allows different implementations of a specific
+ * service type.
+ */
+
+/**
+ * Expose a type of service to the Service API.
+ *
+ * Return a new type of service (such as http, dns, db etc.) to
+ * the service API.
+ *
+ * This information will be used to display the server node form,
+ * allowing you to create services of this type.
+ *
+ * Just defining a service type without any implementations of it,
+ * will automatically provide the "None" implementation.
+ *
+ * You will then need to create a new file in the same directory
+ * as your module named "$module.service.inc, containing at
+ * least a single class named "provisionService_$service", which
+ * extends the base provisionService class.
+ *
+ * @see hosting_server_services()
+ * @return
+ *    an associative array with the index declaring the service
+ *    type, and containing another associative array of properties.
+ *    At present only the 'title' property is required for display
+ *    of the server node form.
+ */
+function hosting_solr_hosting_service_type() {
+  return array(
+    'solr' => array(       // Machine name
+      'title' => t('Solr service'), // Human-readable name
+      'weight' => 0,       // Optional, defaults to 0
+    ),
+  );
+}
+
+/**
+ * Expose a service implementation to the service API.
+ *
+ * Return a service implementation, such as the "apache" implementation
+ * of the "http" service.
+ *
+ * An implementation class should go in {module name}.service.inc and be must be
+ * named hostingService_{service type}_{type}, which should be a subclass of
+ * hostingService_{service type} or hostingService.
+ *
+ * You will then need to either extend the existing {module name}.service.inc
+ * file, or create a new file, containing the implementation of your service.
+ *
+ * @return
+ *   An associative array with the service implementation as key, and the
+ *   service type implemented as value.
+ *
+ * @see hosting_server_services()
+ */
+function hosting_solr_hosting_service() {
+  return array('apollo' => 'solr');   // Service implementation => service type.
+}
+
+/**
+ * @} End of "defgroup hostingserviceapi".
+ */
+
+/**
+ * Implementation of hook_form_alter()
+ */
+function hosting_solr_form_alter(&$form, $form_state, $form_id) {
+  if ($form_id == 'site_node_form') {
+    $form['solr'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Provision solr for this site'),
+      '#default_value' => isset($form['#node']->solr) ? $form['#node']->solr : FALSE,
+      '#weight' => 14,
+    );
+    return $form;
+  }
+}
+
+/** 
+ * Implementation of hook_insert()
+ */
+function hosting_solr_insert($node) {
+  if ($node->solr) {
+    db_query("INSERT INTO {hosting_solr} (vid, nid, solr) VALUES (%d, %d, %d)", $node->vid, $node->nid, $node->solr);
+  }
+}
+
+/**
+ * Implementation of hook_update()
+ */
+function hosting_solr_update($node) {
+  db_query("UPDATE {hosting_solr} SET solr = %d WHERE nid = %d", $node->solr, $node->nid);
+}
+
+/**
+ * Implementation of hook_delete()
+ */
+function hosting_solr_delete($node) {
+  db_query("DELETE FROM {hosting_solr} WHERE nid = %d", $node->nid);
+}
+
+/**
+ * Implementation of hook_delete_revision()
+ */
+function hosting_solr_delete_revision($node) {
+  db_query("DELETE FROM {hosting_solr} WHERE vid = %d", $node->vid);
+}
+
+/** 
+ * Implementation of hook_nodeapi()
+ */
+function hosting_solr_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
+  if ($node->type == 'site') {
+    switch ($op) {
+    case 'insert':
+        hosting_solr_insert($node);
+        break;
+      case 'update':
+        hosting_solr_update($node);
+        break;
+      case 'delete' :
+        hosting_solr_delete($node);
+        break;
+      case 'delete revision':
+        hosting_solr_delete_revision($node);
+        break;
+      case 'validate' :
+        break;
+      case 'load':
+        $additions['solr'] = db_result(db_query("SELECT solr FROM {hosting_solr} WHERE vid=%d", $node->vid));
+        return $additions;
+        break;
+    }
+  }
+}
+

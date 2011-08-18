@@ -1,0 +1,42 @@
+<?php
+
+// vim: filetype=php
+
+function hosting_solr_schema() {
+  $schema['hosting_solr'] = array(
+    'fields' => array(
+      'vid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'nid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'solr' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'primary key' => array('vid', 'nid'),
+  );
+
+  return $schema;
+}
+
+function hosting_solr_install() {
+  drupal_install_schema('hosting_solr');
+}
+
+function hosting_solr_uninstall() {
+  //db_query("DELETE FROM {hosting_service} WHERE service='solr');
+  drupal_uninstall_schema('hosting_solr');
+}
+
+

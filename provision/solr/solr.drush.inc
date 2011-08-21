@@ -64,6 +64,12 @@ class provisionService_solr extends provisionService {
     $this->parse_configs();
   }
 
+  function verify_server_cmd() {
+    $this->create_config($this->context->type);
+    $this->parse_configs();
+  }
+
+
   /**
    * PUBLIC API!
    *

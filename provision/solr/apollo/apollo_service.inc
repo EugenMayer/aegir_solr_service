@@ -110,28 +110,25 @@ class provisionService_solr_apollo extends provisionService_solr {
     }
   }
 
-    $this->server->shell_exec('sudo ' . $path . ' create' $core_name);
+  function create_solr_core($solr_core_name) {
+    $path = $this->apollo_get_path();
+
+    $this->server->shell_exec('sudo ' . $path . ' create ' $solr_core_name);
   }
 
-  function remove_site_core($core_name) {
+  function purge_solr_core($solr_core_name) {
     $path = apollo_get_path();
 
     $this->server->shell_exec('sudo ' . $path . ' stop');
-    $this->server->shell_exec('sudo ' . $path . ' remove ' $core_name);
+    $this->server->shell_exec('sudo ' . $path . ' purge ' $core_name);
     $this->server->shell_exec('sudo ' . $path . ' start');
   }
-  //*/
+
+  function connect($name) {
+    // We can test this by connecting to http://<host>:<port>/solr/<solr_core_name>/admin/
+    // for now return TRUE
+    return TRUE;
+  }
 
 }
-
-
-/**
- * A apollo configuration file class.
- *
- * Just a file containing the value passed to us.
- */
-class provisionConfig_solr extends provisionConfig {
-
-}
-
 

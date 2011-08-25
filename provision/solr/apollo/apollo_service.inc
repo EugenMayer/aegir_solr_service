@@ -68,9 +68,9 @@ class provisionService_solr_apollo extends provisionService_solr {
     $this->server->setProperty('apollo_search_server', 0);
   }
 
+  function apollo_get_path() {
+    $path = '';
 
-  function save_server() {
-    /*
     if (provision_file()->exists('/usr/local/bin/apollo')->status()) {
       $path = "/usr/local/bin/apollo";
     }
@@ -78,12 +78,16 @@ class provisionService_solr_apollo extends provisionService_solr {
       $path = "/usr/bin/apollo";
     }
     else {
-      return;
+      // Why were we sometimes getting here?
+      //return;
+      $path = "/usr/bin/apollo";
     }
-    //*/
 
-    $path = "/usr/bin/apollo";
+    return $path;
+  }
 
+
+  function save_server() {
     //$this->server->shell_exec($path . ' status');
     //$this->server->apollo_search_server = 1;
   }

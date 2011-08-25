@@ -102,9 +102,13 @@ class provisionService_solr_apollo extends provisionService_solr {
   }
 
 
-  /*
-  function create_site_core($core_name) {
-    $path = apollo_get_path();
+  function solr_core_exists($solr_core_name) {
+    $this->server->shell_exec('sudo ' . $path . ' status ' $solr_core_name);
+    $this->server->nginx_has_gzip = preg_match("/does not exist/", implode('', drush_shell_exec_output()), $match);
+    if (!empty($match)) {
+      return TRUE;
+    }
+  }
 
     $this->server->shell_exec('sudo ' . $path . ' create' $core_name);
   }

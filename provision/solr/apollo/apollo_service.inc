@@ -68,6 +68,21 @@ class provisionService_solr_apollo extends provisionService_solr {
     $this->server->setProperty('apollo_search_server', 0);
   }
 
+  function save_server() {
+    //$this->server->shell_exec($path . ' status');
+    //$this->server->apollo_search_server = 1;
+  }
+
+  function verify_server_cmd() {
+    provision_file()->copy(dirname(__FILE__) . '/schema.xml', $this->server->include_path . '/schema.xml');
+    $this->sync($this->server->include_path . '/schema.xml');
+    provision_file()->copy(dirname(__FILE__) . '/solrconfig.xml', $this->server->include_path . '/solrconfig.xml');
+    $this->sync($this->server->include_path . '/solrconfig.xml');
+    // Call the parent at the end. it will restart the server when it finishes.
+    parent::verify_server_cmd();
+  }
+
+
   function apollo_get_path() {
     $path = '';
 
@@ -86,24 +101,8 @@ class provisionService_solr_apollo extends provisionService_solr {
     return $path;
   }
 
-
-  function save_server() {
-    //$this->server->shell_exec($path . ' status');
-    //$this->server->apollo_search_server = 1;
-  }
-
-  function verify_server_cmd() {
-    provision_file()->copy(dirname(__FILE__) . '/schema.xml', $this->server->include_path . '/schema.xml');
-    $this->sync($this->server->include_path . '/schema.xml');
-    provision_file()->copy(dirname(__FILE__) . '/solrconfig.xml', $this->server->include_path . '/solrconfig.xml');
-    $this->sync($this->server->include_path . '/solrconfig.xml');
-    // Call the parent at the end. it will restart the server when it finishes.
-    parent::verify_server_cmd();
-  }
-
-
   function solr_core_exists($solr_core_name) {
-    $this->server->shell_exec('sudo ' . $path . ' status ' $solr_core_name);
+    $this->server->shell_exec('sudo ' . $path . ' status ' . $solr_core_name);
     $this->server->nginx_has_gzip = preg_match("/does not exist/", implode('', drush_shell_exec_output()), $match);
     if (!empty($match)) {
       return TRUE;
@@ -113,14 +112,14 @@ class provisionService_solr_apollo extends provisionService_solr {
   function create_solr_core($solr_core_name) {
     $path = $this->apollo_get_path();
 
-    $this->server->shell_exec('sudo ' . $path . ' create ' $solr_core_name);
+    $this->server->shell_exec('sudo ' . $path . ' create ' . $solr_core_name);
   }
 
   function purge_solr_core($solr_core_name) {
     $path = apollo_get_path();
 
     $this->server->shell_exec('sudo ' . $path . ' stop');
-    $this->server->shell_exec('sudo ' . $path . ' purge ' $core_name);
+    $this->server->shell_exec('sudo ' . $path . ' purge ' . $core_name);
     $this->server->shell_exec('sudo ' . $path . ' start');
   }
 

@@ -129,7 +129,6 @@ class provisionService_solr extends provisionService {
    * Generate a new mysql solr_core and user account for the specified credentials
    */
   function create_site_solr_core($creds = array()) {
-    drush_log('hi3', 'warning');
     if (!sizeof($creds)) {
       //$creds = $this->generate_site_credentials();
       $creds['solr_core_name'] = $this->suggest_solr_core_name();

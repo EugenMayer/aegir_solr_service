@@ -55,11 +55,6 @@ class provisionService_solr_apollo extends provisionService_solr {
   function init() {
     // REMEMBER TO CALL THE PARENT!
     parent::init();
-
-    /**
-     * Register configuration classes for the create_config / delete_config methods.
-     */
-    $this->configs['site'][] = 'provisionConfig_solr';
   }
 
   function init_server() {
@@ -73,17 +68,6 @@ class provisionService_solr_apollo extends provisionService_solr {
     $this->server->apollo_search_server = 1;
   }
 
-  /*
-  function verify_server_cmd() {
-    provision_file()->copy(dirname(__FILE__) . '/schema.xml', $this->server->include_path . '/schema.xml');
-    $this->sync($this->server->include_path . '/schema.xml');
-    provision_file()->copy(dirname(__FILE__) . '/solrconfig.xml', $this->server->include_path . '/solrconfig.xml');
-    $this->sync($this->server->include_path . '/solrconfig.xml');
-    // Call the parent at the end. it will restart the server when it finishes.
-    parent::verify_server_cmd();
-  }
-  //*/
-
   function verify_site_cmd() {
     provision_file()->copy(dirname(__FILE__) . '/schema.xml', $this->server->include_path . '/schema.xml');
     $this->sync($this->server->include_path . '/schema.xml');
@@ -92,7 +76,6 @@ class provisionService_solr_apollo extends provisionService_solr {
     // Call the parent at the end. it will restart the server when it finishes.
     parent::verify_site_cmd();
   }
-
 
   function apollo_get_path() {
     $path = '';

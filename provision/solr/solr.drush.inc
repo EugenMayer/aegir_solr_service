@@ -43,16 +43,22 @@ class provisionService_solr extends provisionService {
   }
 
   /**
+   * Register the solr handler for platforms, based on the solr_server option.
+   */
+  //static function subscribe_platform($context) {
+  //  $context->setProperty('solr_server', '@server_master');
+  //  $context->is_oid('solr_server');
+  //  $context->service_subscribe('http', $context->solr_server->name);
+  //}
+
+  /**
    * Register the solr handler for sites, based on the solr_server option.
    */
-  /*
   static function subscribe_site($context) {
     $context->setProperty('solr_server', '@server_master');
     $context->is_oid('solr_server');
     $context->service_subscribe('solr', $context->solr_server->name);
   }
-  //*/
-
 
   /**
    * Initialize the service along with the server object.
@@ -90,7 +96,8 @@ class provisionService_solr extends provisionService {
   //*/
 
   function verify_site_cmd() {
-    $this->create_config(d()->type);
+    //$this->create_config(d()->type);
+    $this->create_config($this->context->type);
     $this->parse_configs();
   }
 

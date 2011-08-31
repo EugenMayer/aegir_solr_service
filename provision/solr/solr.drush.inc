@@ -38,6 +38,22 @@ function solr_provision_services() {
 class provisionService_solr extends provisionService {
   public $service = 'solr';
 
+  function default_port() {
+    return 8989;
+  }
+
+  /**
+   * Register the solr handler for sites, based on the solr_server option.
+   */
+  /*
+  static function subscribe_site($context) {
+    $context->setProperty('solr_server', '@server_master');
+    $context->is_oid('solr_server');
+    $context->service_subscribe('solr', $context->solr_server->name);
+  }
+  //*/
+
+
   /**
    * Initialize the service along with the server object.
    */
@@ -59,13 +75,22 @@ class provisionService_solr extends provisionService {
    * We change what we will do based on what the 
    * type of object the command is being run against.
    */
+  /*
   function verify() {
     $this->create_config(d()->type);
     $this->parse_configs();
   }
+  //*/
 
+  /*
   function verify_server_cmd() {
     $this->create_config($this->context->type);
+    $this->parse_configs();
+  }
+  //*/
+
+  function verify_site_cmd() {
+    $this->create_config(d()->type);
     $this->parse_configs();
   }
 
@@ -84,10 +109,12 @@ class provisionService_solr extends provisionService {
     for ($i = 0; $i < 100; $i++) {
       $option = sprintf("%s_%d", substr($suggest_base, 0, 15 - strlen( (string) $i) ), $i);
       if (!$this->solr_core_exists($option)) {
+        drush_log('* oh hai 2', 'warning');
         return $option;
       }
     }
 
+    drush_log('* oh noes 2', 'warning');
     drush_set_error('PROVISION_CREATE_SOLR_CORE_FAILED', dt("Could not find a free solr_core names after 100 attempts"));
     return false;
   }
@@ -96,20 +123,24 @@ class provisionService_solr extends provisionService {
    * Generate a new mysql solr_core and user account for the specified credentials
    */
   function create_site_solr_core($creds = array()) {
+    drush_log('hi3', 'warning');
     if (!sizeof($creds)) {
       //$creds = $this->generate_site_credentials();
       $creds['solr_core_name'] = $this->suggest_solr_core_name();
     }
     extract($creds);
 
+    /*
     if (!$this->can_create_solr_core()) {
       drush_set_error('PROVISION_CREATE_SOLR_CORE_FAILED');
       drush_log("solr_core could not be created.", 'error');
       return FALSE;
     }
+    //*/
 
     $this->create_solr_core($solr_core_name);
-    $status = $this->solr_core_exists($solr_core_name);
+    //$status = $this->solr_core_exists($solr_core_name);
+    $status = TRUE;
 
     if ($status) {
       drush_log(dt('Created @name solr_core', array("@name" => $solr_core_name)), 'success');

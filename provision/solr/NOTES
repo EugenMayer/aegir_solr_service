@@ -1,0 +1,1 @@
+drush provision-save @server_master --solr_service_type=apollo

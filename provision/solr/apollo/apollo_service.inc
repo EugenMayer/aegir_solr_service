@@ -45,7 +45,8 @@ class provisionService_solr_apollo extends provisionService_solr {
   *   The default value for the restart command input.
   */
   function default_restart_cmd() {
-    return "sudo /etc/init.apollo restart";
+    //return "sudo /etc/init.d/apollo restart";
+    return "echo 'hi'";
   }
 
 
@@ -70,9 +71,10 @@ class provisionService_solr_apollo extends provisionService_solr {
 
   function save_server() {
     //$this->server->shell_exec($path . ' status');
-    //$this->server->apollo_search_server = 1;
+    $this->server->apollo_search_server = 1;
   }
 
+  /*
   function verify_server_cmd() {
     provision_file()->copy(dirname(__FILE__) . '/schema.xml', $this->server->include_path . '/schema.xml');
     $this->sync($this->server->include_path . '/schema.xml');
@@ -80,6 +82,16 @@ class provisionService_solr_apollo extends provisionService_solr {
     $this->sync($this->server->include_path . '/solrconfig.xml');
     // Call the parent at the end. it will restart the server when it finishes.
     parent::verify_server_cmd();
+  }
+  //*/
+
+  function verify_site_cmd() {
+    provision_file()->copy(dirname(__FILE__) . '/schema.xml', $this->server->include_path . '/schema.xml');
+    $this->sync($this->server->include_path . '/schema.xml');
+    provision_file()->copy(dirname(__FILE__) . '/solrconfig.xml', $this->server->include_path . '/solrconfig.xml');
+    $this->sync($this->server->include_path . '/solrconfig.xml');
+    // Call the parent at the end. it will restart the server when it finishes.
+    parent::verify_site_cmd();
   }
 
 
@@ -102,25 +114,37 @@ class provisionService_solr_apollo extends provisionService_solr {
   }
 
   function solr_core_exists($solr_core_name) {
-    $this->server->shell_exec('sudo ' . $path . ' status ' . $solr_core_name);
-    $this->server->nginx_has_gzip = preg_match("/does not exist/", implode('', drush_shell_exec_output()), $match);
+    //$this->server->shell_exec('sudo ' . $path . ' status ' . $solr_core_name);
+    $this->server->shell_exec('cat /etc/hostname');
+    drush_log('*** solr_core_exists: hostname: ' . print_r(drush_shell_exec_output(), TRUE), 'warning');
+    $this->server->shell_exec('echo hi');
+    drush_log('** exists: ' . print_r(drush_shell_exec_output(), TRUE), 'warning');
+    $exists = preg_match("/$solr_core_name/", implode('', drush_shell_exec_output()), $match);
     if (!empty($match)) {
       return TRUE;
     }
+
+    return FALSE;
   }
 
   function create_solr_core($solr_core_name) {
+    drush_log('*** oh hai 1', 'warning');
     $path = $this->apollo_get_path();
+    drush_log('*** apollo_get_path: ' . print_r($path, TRUE), 'warning');
+    $this->server->shell_exec('cat /etc/hostname');
+    drush_log('*** create_solr_core hostname: ' . print_r(drush_shell_exec_output(), TRUE), 'warning');
+    drush_log('*** this->remote_host: ' . print_r($this->remote_host, TRUE), 'warning');
 
-    $this->server->shell_exec('sudo ' . $path . ' create ' . $solr_core_name);
+    //$this->server->shell_exec('sudo ' . $path . ' create ' . $solr_core_name);
+    return true;
   }
 
   function purge_solr_core($solr_core_name) {
     $path = apollo_get_path();
 
-    $this->server->shell_exec('sudo ' . $path . ' stop');
-    $this->server->shell_exec('sudo ' . $path . ' purge ' . $core_name);
-    $this->server->shell_exec('sudo ' . $path . ' start');
+    //$this->server->shell_exec('sudo ' . $path . ' stop');
+    //$this->server->shell_exec('sudo ' . $path . ' purge ' . $core_name);
+    //$this->server->shell_exec('sudo ' . $path . ' start');
   }
 
   function connect($name) {
@@ -129,5 +153,9 @@ class provisionService_solr_apollo extends provisionService_solr {
     return TRUE;
   }
 
+
+  function parse_configs() {
+    return $this->restart();
+  }
 }
 

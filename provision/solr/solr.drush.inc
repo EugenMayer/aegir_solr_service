@@ -113,16 +113,14 @@ class provisionService_solr extends provisionService {
       return $suggest_base;
     }
 
-    for ($i = 0; $i < 100; $i++) {
+    for ($i = 0; $i < 10; $i++) {
       // TODO: Remove length limit
-      $option = sprintf("%s_%d", substr($suggest_base, 0, 15 - strlen( (string) $i) ), $i);
+      $option = sprintf("%s_%d", substr($suggest_base, 0), $i);
       if (!$this->solr_core_exists($option)) {
-        drush_log('* oh hai 2', 'warning');
         return $option;
       }
     }
 
-    drush_log('* oh noes 2', 'warning');
     drush_set_error('PROVISION_CREATE_SOLR_CORE_FAILED', dt("Could not find a free solr_core names after 100 attempts"));
     return false;
   }

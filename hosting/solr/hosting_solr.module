@@ -86,31 +86,37 @@ function hosting_solr_form_alter(&$form, $form_state, $form_id) {
   if ($form_id == 'site_node_form') {
     $node = $form['#node'];
 
-    /*
+    //$form['solr'] = array(
+    //  '#type' => 'checkbox',
+    //  '#title' => t('Provision solr for this site'),
+    //  '#default_value' => isset($form['#node']->solr) ? $form['#node']->solr : FALSE,
+    //  '#weight' => 14,
+    //);
+
+    $form['solr_server'] = array(
+        '#type' => 'radios',
+        '#title' => t('Solr server'),
+        //'#required' => TRUE,
+        '#description' => t('The solr server the site will use.'),
+        '#options' => array('' => t('None')) + hosting_get_servers('solr'),
+        '#default_value' => $node->solr_server ? $node->solr_server : '',
+    );
     $form['solr'] = array(
       '#type' => 'checkbox',
       '#title' => t('Provision solr for this site'),
       '#default_value' => isset($form['#node']->solr) ? $form['#node']->solr : FALSE,
-      '#weight' => 14,
+      //'#weight' => 14,
     );
-    //*/
 
-    if ($node->nid && !empty($node->solr_server)) {
-      $solr_server = node_load($node->solr_server);
-
-      if ($solr_server->services['solr']->configurable_locations) {
-        $configurable_locations = TRUE;
-      }
-    }
-
-    _hosting_site_field($form, $node, 'solr_server', array(
-        '#type' => 'radios',
-        '#title' => t('Solr server'),
-        '#required' => TRUE,
-        '#description' => t('The solr server the site will use.'),
-        '#options' => array('' => t('None')) + hosting_get_servers('solr'),
-        '#default_value' => $node->solr_server ? $node->solr_server : '',
-      ), '_hosting_node_link', !$node->nid || empty($node->solr_server));
+    //_hosting_site_field($form, $node, 'solr_server', array(
+    //    '#type' => 'radios',
+    //    '#title' => t('Solr server'),
+    //    '#required' => TRUE,
+    //    '#description' => t('The solr server the site will use.'),
+    //    '#options' => array('' => t('None')) + hosting_get_servers('solr'),
+    //    '#default_value' => $node->solr_server ? $node->solr_server : '',
+    //  ), '_hosting_node_link', !$node->nid || empty($node->solr_server));
+    //drupal_set_message('<pre>' . print_r($form, TRUE) . '</pre>');
 
     return $form;
   }
@@ -121,7 +127,7 @@ function hosting_solr_form_alter(&$form, $form_state, $form_id) {
  */
 function hosting_solr_insert($node) {
   if ($node->solr) {
-    db_query("INSERT INTO {hosting_solr} (vid, nid, solr) VALUES (%d, %d, %d)", $node->vid, $node->nid, $node->solr);
+    db_query("INSERT INTO {hosting_solr} (vid, nid, solr, solr_server) VALUES (%d, %d, %d, %d)", $node->vid, $node->nid, $node->solr, $node->solr_server);
   }
 }
 
@@ -129,7 +135,7 @@ function hosting_solr_insert($node) {
  * Implementation of hook_update()
  */
 function hosting_solr_update($node) {
-  db_query("UPDATE {hosting_solr} SET solr = %d WHERE nid = %d", $node->solr, $node->nid);
+  db_query("UPDATE {hosting_solr} SET solr = %d, solr_server = %d WHERE nid = %d", $node->solr, $node->solr_server, $node->nid);
 }
 
 /**
@@ -167,7 +173,7 @@ function hosting_solr_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
       case 'validate' :
         break;
       case 'load':
-        $additions['solr'] = db_result(db_query("SELECT solr FROM {hosting_solr} WHERE vid=%d", $node->vid));
+        $additions = db_fetch_array(db_query("SELECT solr, solr_server FROM {hosting_solr} WHERE vid = %d", $node->vid));
         return $additions;
         break;
     }

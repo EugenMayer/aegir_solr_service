@@ -55,6 +55,9 @@ class provisionService_solr extends provisionService {
    * Register the solr handler for sites, based on the solr_server option.
    */
   static function subscribe_site($context) {
+    //$context->setProperty('solr_server', '@server_master');
+    drush_log('* subscribe_site $context->solr_server->name: ' . $context->solr_server->name, 'warning');
+    drush_log('* subscribe_site $context->db_server->name: ' . $context->db_server->name, 'warning');
     $context->setProperty('solr_server', '@server_master');
     $context->is_oid('solr_server');
     $context->service_subscribe('solr', $context->solr_server->name);

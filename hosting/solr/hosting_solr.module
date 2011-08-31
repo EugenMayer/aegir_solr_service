@@ -84,12 +84,34 @@ function hosting_solr_hosting_service() {
  */
 function hosting_solr_form_alter(&$form, $form_state, $form_id) {
   if ($form_id == 'site_node_form') {
+    $node = $form['#node'];
+
+    /*
     $form['solr'] = array(
       '#type' => 'checkbox',
       '#title' => t('Provision solr for this site'),
       '#default_value' => isset($form['#node']->solr) ? $form['#node']->solr : FALSE,
       '#weight' => 14,
     );
+    //*/
+
+    if ($node->nid && !empty($node->solr_server)) {
+      $solr_server = node_load($node->solr_server);
+
+      if ($solr_server->services['solr']->configurable_locations) {
+        $configurable_locations = TRUE;
+      }
+    }
+
+    _hosting_site_field($form, $node, 'solr_server', array(
+        '#type' => 'radios',
+        '#title' => t('Solr server'),
+        '#required' => TRUE,
+        '#description' => t('The solr server the site will use.'),
+        '#options' => array('' => t('None')) + hosting_get_servers('solr'),
+        '#default_value' => $node->solr_server ? $node->solr_server : '',
+      ), '_hosting_node_link', !$node->nid || empty($node->solr_server));
+
     return $form;
   }
 }

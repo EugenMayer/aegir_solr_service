@@ -114,6 +114,7 @@ class provisionService_solr extends provisionService {
     }
 
     for ($i = 0; $i < 100; $i++) {
+      // TODO: Remove length limit
       $option = sprintf("%s_%d", substr($suggest_base, 0, 15 - strlen( (string) $i) ), $i);
       if (!$this->solr_core_exists($option)) {
         drush_log('* oh hai 2', 'warning');

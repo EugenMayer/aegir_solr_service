@@ -99,9 +99,6 @@ class provisionService_solr_apollo extends provisionService_solr {
     $path = $this->apollo_get_path();
     drush_log('*** apollo_get_path: ' . print_r($path, TRUE), 'warning');
 
-    $this->server->shell_exec('cat /etc/hostname');
-    drush_log('*** solr_core_exists: hostname: ' . print_r(drush_shell_exec_output(), TRUE), 'warning');
-
     $this->server->shell_exec('sudo ' . $path . ' status ' . $solr_core_name);
     $exists = preg_match("/$solr_core_name/", implode('', drush_shell_exec_output()), $match);
     //drush_log('** exists: ' . print_r(drush_shell_exec_output(), TRUE), 'warning');
@@ -115,9 +112,6 @@ class provisionService_solr_apollo extends provisionService_solr {
   function create_solr_core($solr_core_name) {
     $path = $this->apollo_get_path();
     drush_log('*** apollo_get_path: ' . print_r($path, TRUE), 'warning');
-
-    $this->server->shell_exec('cat /etc/hostname');
-    drush_log('*** create_solr_core hostname: ' . print_r(drush_shell_exec_output(), TRUE), 'warning');
 
     $this->server->shell_exec('sudo ' . $path . ' create ' . $solr_core_name);
     return true;

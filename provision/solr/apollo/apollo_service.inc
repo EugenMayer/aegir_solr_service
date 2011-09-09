@@ -102,14 +102,17 @@ class provisionService_solr_apollo extends provisionService_solr {
   }
 
   function solr_core_exists($solr_core_name) {
+    $path = $this->apollo_get_path();
     $this->server->shell_exec('sudo ' . $path . ' status ' . $solr_core_name);
-    $this->server->nginx_has_gzip = preg_match("/does not exist/", implode('', drush_shell_exec_output()), $match);
+    preg_match("/does not exist/", implode('', drush_shell_exec_output()), $match);
     if (!empty($match)) {
       return TRUE;
     }
   }
 
   function create_solr_core($solr_core_name) {
+
+
     $path = $this->apollo_get_path();
 
     $this->server->shell_exec('sudo ' . $path . ' create ' . $solr_core_name);
@@ -119,7 +122,7 @@ class provisionService_solr_apollo extends provisionService_solr {
     $path = apollo_get_path();
 
     $this->server->shell_exec('sudo ' . $path . ' stop');
-    $this->server->shell_exec('sudo ' . $path . ' purge ' . $core_name);
+    $this->server->shell_exec('sudo ' . $path . ' purge ' . $solr_core_name);
     $this->server->shell_exec('sudo ' . $path . ' start');
   }
 

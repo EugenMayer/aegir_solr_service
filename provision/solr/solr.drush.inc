@@ -38,37 +38,21 @@ function solr_provision_services() {
 class provisionService_solr extends provisionService {
   public $service = 'solr';
 
-  /**
-   * Initialize the service along with the server object.
-   */
-  function init() {
-    // REMEMBER TO CALL THE PARENT!
-    parent::init();
-
-    /**
-     * We do not need to use this in our solr.
-     *
-     * You would extend this if you needed to save values
-     * for all possible implementations of this service type.
-     */
+  static function subscribe_site($context) {
+    $context->setProperty('solr', drush_get_option('solr',0));
+    $context->setProperty('solr_core_name', drush_get_option('site_machine_name',NULL));
   }
 
   /**
-   * Called on provision-verify.
-   *
-   * We change what we will do based on what the 
-   * type of object the command is being run against.
+   * When a site gets verified, be sure the core exists. In case the core-alias changed
+   * we just create a new one
+   * @return v
    */
-  function verify() {
-    $this->create_config(d()->type);
-    $this->parse_configs();
+  function verify_site_cmd() {
+    // TODO: if the old alias has change we should cleanup the old.. but how to remember what the old was
+    // guess this should be a trigger in hostmaster
+    $this->create_site_solr_core();
   }
-
-  function verify_server_cmd() {
-    $this->create_config($this->context->type);
-    $this->parse_configs();
-  }
-
   /**
    * Find a viable solr_core name, based on the site's uri.
    */
@@ -93,24 +77,20 @@ class provisionService_solr extends provisionService {
   }
 
   /**
-   * Generate a new mysql solr_core and user account for the specified credentials
+   * Generate a new solr_core and user account for the specified credentials
+   * TODO: why we do have create_site_solr_core and create_solr_core? One of those should be at least protected
    */
-  function create_site_solr_core($creds = array()) {
+  function create_site_solr_core($creds = array(), $force = FALSE) {
     if (!sizeof($creds)) {
-      //$creds = $this->generate_site_credentials();
-      $creds['solr_core_name'] = $this->suggest_solr_core_name();
+      $creds = $this->fetch_site_credentials();
     }
     extract($creds);
 
-    if (!$this->can_create_solr_core()) {
-      drush_set_error('PROVISION_CREATE_SOLR_CORE_FAILED');
-      drush_log("solr_core could not be created.", 'error');
-      return FALSE;
+    $status = TRUE;
+    // create the solr core if its not yet here
+    if(!$this->solr_core_exists($solr_core_name) || $force) {
+      $status = $this->create_solr_core($solr_core_name);
     }
-
-    $this->create_solr_core($solr_core_name);
-    $status = $this->solr_core_exists($solr_core_name);
-
     if ($status) {
       drush_log(dt('Created @name solr_core', array("@name" => $solr_core_name)), 'success');
     }
@@ -121,7 +101,7 @@ class provisionService_solr extends provisionService {
   }
 
   /**
-   * Remove the solr_core and user account for the supplied credentials
+   * Remove the solr_core for the supplied credentials
    */
   function destroy_site_solr_core($creds = array()) {
     if (!sizeof($creds)) {
@@ -140,106 +120,53 @@ class provisionService_solr extends provisionService {
      drush_set_error('PROVISION_PURGE_SOLR_CORE_FAILED');
      return FALSE;
     }
+    return TRUE;
   }
 
   function generate_site_credentials() {
     $creds = array();
-    // replace with service type
-    $solr_core_type = drush_get_option('solr_core_type', 'apollo');
-
-    //TODO - this should not be here at all according to db.drush.inc
-    $creds['solr_core_type'] = drush_set_option('solr_core_type', $solr_core_type, 'site');
-    $creds['solr_core_host'] = drush_set_option('solr_core_host', $this->server->remote_host, 'site');
-    $creds['solr_core_port'] = drush_set_option('solr_core_port', $this->server->solr_core_port, 'site');
-    $creds['solr_core_name'] = drush_set_option('solr_core_name', $this->suggest_solr_core_name(), 'site');
-
-    return $creds;
+    // Todo: why should we need this at all?
+    return array();
   }
-
 
   function fetch_site_credentials() {
     $creds = array();
+    $creds['solr'] = drush_get_option('solr', '');
+    $creds['solr_core_name'] = drush_get_option('solr_core_name', '');
 
-    $keys = array('solr_core_type', 'solr_core_port', 'solr_core_name', 'solr_core_host');
-    foreach ($keys as $key) {
-      $creds[$key] = drush_get_option($key, '', 'site');
+    if($creds['solr_core_name'] == '') {
+      $creds['solr_core_name'] = $this->suggest_solr_core_name();
     }
-
     return $creds;
   }
-
+  /**
+   * Checks if a core already exists
+   * @param the alias of the core $name
+   * @return bool return true if the core exists
+   */
   function solr_core_exists($name) {
     return FALSE;
   }
-
+  /**
+   * Deletes the alias and removes the dat-folder
+   * @param the alias of the core $name
+   * TODO: why bool?
+   * @return bool ?
+   */
   function purge_solr_core($name) {
     return FALSE;
   }
 
+  /**
+   * The actually command to create a core-alias on the satelite.
+   * @param the alias of the core $name
+   * @return bool return true if core could be created
+   */
   function create_solr_core($name) {
     return FALSE;
   }
 
   function connect($name) {
     return FALSE;
-  }
-
-  /**
-   * PUBLIC API!
-   *
-   * These are just a basic solr, the thing to notice here is that these
-   * methods are just stubs for later implementations to extend.
-   *
-   * If a specific implementation doesn't need to parse the configuration files
-   * that are generated for instance, it can just not implement the stub.
-   */
-
-  /**
-   * Commonly something like running the restart_cmd or sending SIGHUP to a process.
-   */
-  function parse_configs() {
-    return TRUE;
-  }
-
-  /**
-   * Generate a site specific configuration file
-   */
-  function create_site_config() {
-    return TRUE;
-  }
-
-  /**
-   * Remove an existing site configuration file.
-   */
-  function delete_site_config() {
-    return TRUE;
-  }
-
-  /**
-   * Add a new platform specific configuration file.
-   */
-  function create_platform_config() {
-    return TRUE;
-  }
-
-  /**
-   * Remove an existing platform configuration file.
-   */
-  function delete_platform_config() {
-    return TRUE;
-  }
-
-  /**
-   * Create a new server specific configuration file.
-   */
-  function create_server_config() {
-    return TRUE;
-  }
-
-  /**
-   * Remove an existing server specific configuration file
-   */
-  function delete_server_config() {
-    return TRUE;
   }
 }
